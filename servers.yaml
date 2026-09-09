@@ -1,0 +1,36 @@
+# 通用 MCP 网关 —— 上游服务器配置
+#
+# transport 可选:
+#   - stdio:            用 command/args/cwd/env 启动本地子进程（MCP 服务）
+#   - sse:              连接远程 SSE MCP 服务，用 url/headers
+#   - streamable-http:  连接远程 Streamable HTTP MCP 服务，用 url/headers
+#
+# stdio 上游未写 command 时，默认用「运行网关的同一个 Python」，
+# 这样你的 venv 依赖（mcp、pyautogui 等）会自动可用。
+
+servers:
+  # 你现有的电脑控制（打开软件 / 执行命令 / 媒体控制）
+  - name: pc-control
+    transport: stdio
+    args: ["yo_mcp.py"]
+    cwd: "."
+
+  # ===== 第三方示例（去掉注释即可启用）=====
+
+  # 文件系统 MCP（需 Node.js）
+  # - name: filesystem
+  #   transport: stdio
+  #   command: npx
+  #   args: ["-y", "@modelcontextprotocol/server-filesystem", "C:/Users/21711"]
+
+  # 远程 Streamable HTTP MCP（示例：GitHub Copilot 的 MCP）
+  # - name: github
+  #   transport: streamable-http
+  #   url: "https://api.githubcopilot.com/mcp/"
+  #   headers:
+  #     Authorization: "Bearer <your-token>"
+
+  # 远程 SSE MCP 示例
+  # - name: sse-example
+  #   transport: sse
+  #   url: "http://localhost:3001/sse"

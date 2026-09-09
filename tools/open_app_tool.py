@@ -1443,12 +1443,12 @@ class SoftwareDiscovery:
                             name = winreg.QueryValueEx(sub_key, "DisplayName")[0]
                             install_loc = ""
                             try:
-                                install_loc = winreg.QueryValueEx(sub_key, "InstallLocation")[0]
+                                install_loc = winreg.QueryValueEx(sub_key, "InstallLocation")[0].strip('"')
                             except FileNotFoundError:
                                 pass
                             display_icon = ""
                             try:
-                                display_icon = winreg.QueryValueEx(sub_key, "DisplayIcon")[0]
+                                display_icon = winreg.QueryValueEx(sub_key, "DisplayIcon")[0].strip('"')
                             except FileNotFoundError:
                                 pass
                             apps.append({

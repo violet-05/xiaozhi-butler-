@@ -497,6 +497,73 @@ def register_tool(mcp):
 
 ---
 
+## 🔌 通用 MCP 聚合网关（Gateway）
+
+除了只接小智，本项目还内置了一个**通用 MCP 聚合网关**，能把任意多个 MCP 服务聚合成一个入口，
+同时用本地 `stdio` 和远程 `HTTP` 两种方式暴露给任意客户端（Claude Desktop / Claude Code / Cursor / 小智 / 云端设备）。
+
+### 架构
+
+```
+   上游 MCP 服务（任意多个，可扩展）
+  yo_mcp.py ── filesystem ── github ── ...
+        └────────────┬────────────┘
+                     │ 聚合器（命名空间 + 路由 + 断线隔离）
+              ┌──────┴──────┐
+          stdio(本地)    HTTP(远程 streamable-http)
+  Claude/Cursor/小智      云端 / 多设备
+```
+
+聚合后的工具名 = `{上游名}_{原始工具名}`（例如 `pc-control_open_app_tool`），
+且**完整保留上游工具的原始 inputSchema**。
+
+### 配置上游（servers.yaml）
+
+编辑项目根目录的 `servers.yaml`，`transport` 支持三种：
+
+| transport | 说明 | 必需字段 |
+|-----------|------|---------|
+| `stdio` | 启动本地子进程（MCP 服务） | `args`（`command` 缺省用当前 Python） |
+| `sse` | 连接远程 SSE MCP | `url` |
+| `streamable-http` | 连接远程 Streamable HTTP MCP | `url` |
+
+```yaml
+servers:
+  - name: pc-control            # 你现有的电脑控制
+    transport: stdio
+    args: ["yo_mcp.py"]
+    cwd: "."
+  # 第三方示例（去掉注释启用）
+  # - name: filesystem
+  #   transport: stdio
+  #   command: npx
+  #   args: ["-y", "@modelcontextprotocol/server-filesystem", "C:/Users/21711"]
+  # - name: github
+  #   transport: streamable-http
+  #   url: "https://api.githubcopilot.com/mcp/"
+  #   headers:
+  #     Authorization: "Bearer <token>"
+```
+
+### 启动方式
+
+```bash
+# 方式一：本地 stdio（挂 Claude Desktop / Claude Code / Cursor）
+python -m gateway --transport stdio
+
+# 方式二：远程 HTTP（多设备 / 云端接入）
+python -m gateway --transport http --host 0.0.0.0 --port 8080
+# 接入点: http://<主机>:8080/mcp
+
+# 方式三：小智桥接（让小智也用上聚合后的全部工具）
+python mcp_pipe.py gateway_stdio.py
+```
+
+> 新增依赖：`pyyaml`、`uvicorn`（已加入 `requirements.txt`，`pip install -r requirements.txt` 即可）。
+> 网关的日志走 stderr，stdout 始终保持干净的 MCP 协议通道，因此与 `mcp_pipe.py` 完全兼容。
+
+---
+
 ## 🙏 致谢
 
 - [虾哥 MCP 原项目](https://github.com/78/mcp-calculator) — 本项目基于此实现
